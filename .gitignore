@@ -9,12 +9,12 @@ venv/
 ENV/
 
 # Flask
-instance/*.db
 *.sqlite
 *.sqlite3
 
-# Keep instance folder but ignore database
+# Keep instance folder and database
 !instance/.gitkeep
+!instance/quiz_app.db
 
 # Uploads
 uploads/*
