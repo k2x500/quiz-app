@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Progress - MedQuiz{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .page-header h2 {
+        font-size: 1.5em;
+        margin-bottom: 5px;
+        color: #1a1a1a;
+    }
+
+    .page-header p {
+        font-size: 0.9em;
+        color: #6b7280;
+    }
+
+    .overall-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        padding: 16px;
+        text-align: center;
+        border: 1px solid #d1d5db;
+    }
+
+    .stat-value {
+        font-size: 1.8em;
+        font-weight: 700;
+        color: #2563eb;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        color: #4b5563;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+
+    .subjects-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+        border: 1px solid #d1d5db;
+    }
+
+    .subjects-section h3 {
+        color: #1a1a1a;
+        font-size: 1.2em;
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
+
+    .subject-item {
+        padding: 14px;
+        background: #f9fafb;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        border: 1px solid #d1d5db;
+        transition: all 0.2s ease;
+    }
+
+    .subject-item:hover {
+        border-color: #2563eb;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.15);
+    }
+
+    .subject-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 10px;
+    }
+
+    .subject-title {
+        color: #1a1a1a;
+        font-size: 1em;
+        font-weight: 600;
+    }
+
+    .subject-percentage {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: #2563eb;
+        min-width: 50px;
+        text-align: right;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+        border: 1px solid #d1d5db;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .subject-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #6b7280;
+        font-size: 0.8em;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-small {
+        padding: 6px 14px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-small:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(37, 99, 235, 0.4);
+    }
+
+    .no-progress {
+        text-align: center;
+        padding: 30px;
+        color: #6b7280;
+        font-size: 0.95em;
+    }
+
+    .current-session {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 2px solid #10b981;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .current-session h3 {
+        color: #065f46;
+        font-size: 1.1em;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .current-session p {
+        color: #065f46;
+        margin-bottom: 12px;
+        font-size: 0.95em;
+    }
+
+    .current-session .btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+
+    /* Coming Soon Overlay */
+    .progress-content-wrapper {
+        position: relative;
+        min-height: 400px;
+    }
+
+    .progress-content-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border-radius: 10px;
+        z-index: 10;
+    }
+
+    .progress-content-wrapper::after {
+        content: 'Coming Soon';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2em;
+        font-weight: 700;
+        color: #1a1a1a;
+        text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9);
+        z-index: 11;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .progress-content-wrapper * {
+        pointer-events: none;
+        user-select: none;
+    }
+
+    @media (max-width: 768px) {
+        .overall-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .subject-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .subject-percentage {
+            align-self: flex-end;
+        }
+
+        .progress-content-wrapper::after {
+            font-size: 1.5em;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Preparation Progress</h2>
+    <p>Track your exam preparation across subjects</p>
+</div>
+
+<div class="progress-content-wrapper">
+<div class="overall-stats">
+    <div class="stat-card">
+        <div class="stat-value">{{ progress_percentage|round|int }}%</div>
+        <div class="stat-label">Overall</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ completed_quizzes }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_quizzes - completed_quizzes }}</div>
+        <div class="stat-label">Remaining</div>
+    </div>
+</div>
+
+{% if current_quiz %}
+<div class="current-session">
+    <h3>📚 Current Practice Session</h3>
+    <p><strong>{{ current_quiz.title }}</strong></p>
+    <a href="{{ url_for('quiz_page', quiz_id=current_quiz.id) }}" class="btn">Continue Session</a>
+</div>
+{% endif %}
+
+<div class="subjects-section">
+    <h3>Subject Progress</h3>
+    
+    {% if all_quizzes %}
+        {% for quiz in all_quizzes %}
+            {% set user_progress = namespace(found=false, score=0, total=quiz.question_count, date=none, percentage=0) %}
+            
+            {# Find the most recent progress record for this quiz #}
+            {% for record in recent_progress %}
+                {% if record.quiz_ref.id == quiz.id and not user_progress.found %}
+                    {% set user_progress.found = true %}
+                    {% set user_progress.score = record.score %}
+                    {% set user_progress.total = record.total_questions %}
+                    {% set user_progress.date = record.completed_at %}
+                    {% set user_progress.percentage = (record.score / record.total_questions * 100)|round|int %}
+                {% endif %}
+            {% endfor %}
+            
+            <div class="subject-item">
+                <div class="subject-header">
+                    <div class="subject-title">{{ quiz.title }}</div>
+                    <div class="subject-percentage">{{ user_progress.percentage }}%</div>
+                </div>
+                
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: {{ user_progress.percentage }}%;"></div>
+                </div>
+                
+                <div class="subject-meta">
+                    <div>
+                        {% if user_progress.found %}
+                            <span>Score: {{ user_progress.score }}/{{ user_progress.total }}</span>
+                            <span style="margin-left: 12px;">{{ user_progress.date.strftime('%b %d, %Y') }}</span>
+                        {% else %}
+                            <span>Not started</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if user_progress.found %}
+                            <a href="{{ url_for('quiz_page', quiz_id=quiz.id) }}" class="btn-small">Practice Again</a>
+                        {% else %}
+                            <a href="{{ url_for('quiz_page', quiz_id=quiz.id) }}" class="btn-small">Start Practice</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-progress">
+            <p>No subjects available yet.</p>
+            <a href="{{ url_for('main_menu') }}" class="btn" style="margin-top: 15px;">Go to Main Menu</a>
+        </div>
+    {% endif %}
+</div>
+</div>
+{% endblock %}

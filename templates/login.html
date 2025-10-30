@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MedQuiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f9fafb;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            padding: 50px 60px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            color: #1a1a1a;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .welcome-message {
+            display: none;
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 24px;
+            color: #1e40af;
+            font-weight: 500;
+        }
+
+        .welcome-message.show {
+            display: block;
+        }
+
+        .login-step {
+            display: none;
+        }
+
+        .login-step.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.2s ease;
+            color: #1a1a1a;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .otp-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+        }
+
+        .otp-title {
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+            text-align: center;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .otp-input {
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 700;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            color: #1e40af;
+        }
+
+        .otp-input:focus {
+            border-color: #1d4ed8;
+            box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+        }
+
+        .otp-verified {
+            display: none;
+            color: #059669;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+
+        .otp-verified.show {
+            display: block;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.15em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #10b981;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #059669;
+        }
+
+        .otp-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #3b82f6;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+        }
+
+        .otp-link:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .links a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 0.95em;
+        }
+
+        .alert-success {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-info {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .hint {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .language-switcher {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .language-switcher a {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin: 0 10px;
+        }
+
+        .language-switcher a:hover {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 30px;
+            }
+
+            .logo h1 {
+                font-size: 1.8em;
+            }
+
+            .otp-input {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+
+            .otp-inputs {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Welcome Back</h1>
+            <p>Continue your exam preparation</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="welcome-message" id="welcomeMessage"></div>
+
+        <!-- Step 1: Enter Phone Number -->
+        <div class="login-step active" id="phoneStep">
+            <div class="form-group">
+                <label for="phone_number">Phone Number</label>
+                <input type="tel" id="phone_number" placeholder="+373 60123456" required autofocus maxlength="16">
+                <div class="hint">Format: +373 followed by 8 digits</div>
+            </div>
+            <button type="button" class="btn" onclick="checkPhone()">Continue</button>
+        </div>
+
+        <!-- Step 2a: Password Login (if user has password) -->
+        <div class="login-step" id="passwordStep">
+            <a class="back-link" onclick="goBackToPhone()">← Change phone number</a>
+            
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="login_method" value="password">
+                <input type="hidden" id="phone_password_hidden" name="phone_number">
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                    <a class="otp-link" onclick="switchToOTP()">You can also log in using OTP →</a>
+                </div>
+
+                <button type="submit" class="btn">Login</button>
+            </form>
+        </div>
+
+        <!-- Step 2b: OTP Login (if user has no password or chooses OTP) -->
+        <div class="login-step" id="otpStep">
+            <a class="back-link" onclick="goBackToPhone()">← Change phone number</a>
+            
+            <form method="POST" action="{{ url_for('login') }}" id="otpForm">
+                <input type="hidden" name="login_method" value="otp">
+                <input type="hidden" id="phone_otp_hidden" name="phone_number">
+                
+                <button type="button" class="btn btn-secondary" id="sendOtpBtn" onclick="sendOTP()">Send OTP Code</button>
+
+                <div class="otp-section" id="otpSection" style="display: none;">
+                    <div class="otp-title">Enter your 4-digit verification code</div>
+                    <div class="otp-inputs">
+                        <input type="text" class="otp-input" maxlength="1" data-index="0">
+                        <input type="text" class="otp-input" maxlength="1" data-index="1">
+                        <input type="text" class="otp-input" maxlength="1" data-index="2">
+                        <input type="text" class="otp-input" maxlength="1" data-index="3">
+                    </div>
+                    <div class="otp-verified" id="otpVerified">✓ Code verified successfully!</div>
+                </div>
+
+                <button type="submit" class="btn" id="otpSubmitBtn" style="display: none; margin-top: 20px;">Login with OTP</button>
+            </form>
+        </div>
+
+        <div class="links">
+            <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+        </div>
+
+        <div class="language-switcher">
+            <a href="#">English</a> | <a href="#">Română</a>
+        </div>
+    </div>
+
+    <script>
+        let currentPhone = '';
+        let otpVerified = false;
+        let userHasPassword = false;
+
+        function checkPhone() {
+            const phoneNumber = document.getElementById('phone_number').value;
+            
+            if (!phoneNumber) {
+                alert('Please enter your phone number');
+                return;
+            }
+
+            currentPhone = phoneNumber;
+
+            // Check if phone exists
+            fetch('{{ url_for('check_phone') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_number: phoneNumber })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.exists) {
+                    alert(data.message + '\n\nPlease register first.');
+                    return;
+                }
+
+                // Show welcome message
+                document.getElementById('welcomeMessage').textContent = `Welcome back, ${data.name}!`;
+                document.getElementById('welcomeMessage').classList.add('show');
+
+                // Hide phone step
+                document.getElementById('phoneStep').classList.remove('active');
+
+                if (data.has_password) {
+                    // User has password - show password step
+                    userHasPassword = true;
+                    document.getElementById('phone_password_hidden').value = phoneNumber;
+                    document.getElementById('passwordStep').classList.add('active');
+                    document.getElementById('password').focus();
+                } else {
+                    // User has no password - go directly to OTP
+                    userHasPassword = false;
+                    document.getElementById('phone_otp_hidden').value = phoneNumber;
+                    document.getElementById('otpStep').classList.add('active');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        function switchToOTP() {
+            // Hide password step, show OTP step
+            document.getElementById('passwordStep').classList.remove('active');
+            document.getElementById('phone_otp_hidden').value = currentPhone;
+            document.getElementById('otpStep').classList.add('active');
+        }
+
+        function goBackToPhone() {
+            // Reset and go back to phone input
+            document.getElementById('welcomeMessage').classList.remove('show');
+            document.getElementById('passwordStep').classList.remove('active');
+            document.getElementById('otpStep').classList.remove('active');
+            document.getElementById('phoneStep').classList.add('active');
+            document.getElementById('otpSection').style.display = 'none';
+            document.getElementById('otpSubmitBtn').style.display = 'none';
+            document.getElementById('sendOtpBtn').disabled = false;
+            document.getElementById('sendOtpBtn').textContent = 'Send OTP Code';
+            otpVerified = false;
+            document.getElementById('otpVerified').classList.remove('show');
+        }
+
+        function sendOTP() {
+            // Send OTP request
+            fetch('{{ url_for('send_otp') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone_number: currentPhone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('otpSection').style.display = 'block';
+                    document.getElementById('sendOtpBtn').disabled = true;
+                    document.getElementById('sendOtpBtn').textContent = 'OTP Sent';
+                    
+                    // Auto-focus first OTP input
+                    document.querySelector('.otp-input').focus();
+                    
+                    // Auto-verify since it's pre-filled with 1111
+                    setTimeout(verifyOTP, 500);
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otp.length !== 4) {
+                return;
+            }
+
+            fetch('{{ url_for('verify_otp') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ otp_code: otp, phone_number: currentPhone })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    otpVerified = true;
+                    document.getElementById('otpVerified').classList.add('show');
+                    document.getElementById('otpSubmitBtn').style.display = 'block';
+                    
+                    // Disable OTP inputs
+                    otpInputs.forEach(input => input.disabled = true);
+                } else {
+                    alert('Invalid OTP. Please try again.');
+                }
+            });
+        }
+
+        // OTP input handling
+        const otpInputs = document.querySelectorAll('.otp-input');
+        
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1) {
+                    if (index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    } else {
+                        // All filled, verify
+                        verifyOTP();
+                    }
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').slice(0, 4);
+                pasteData.split('').forEach((char, idx) => {
+                    if (otpInputs[idx]) {
+                        otpInputs[idx].value = char;
+                    }
+                });
+                if (pasteData.length === 4) {
+                    verifyOTP();
+                }
+            });
+        });
+
+        // Allow Enter key on phone input
+        document.getElementById('phone_number').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPhone();
+            }
+        });
+
+        // Phone number masking for Moldovan format: +373 followed by 8 digits
+        const phoneInput = document.getElementById('phone_number');
+        
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            
+            // Ensure it starts with 373
+            if (value.length > 0 && !value.startsWith('373')) {
+                if (value.startsWith('373')) {
+                    // Already correct
+                } else if (value.startsWith('3')) {
+                    value = '373' + value.substring(1);
+                } else {
+                    value = '373' + value;
+                }
+            }
+            
+            // Limit to 373 + 8 digits = 11 total digits
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            
+            // Format as +373 XXXXXXXX
+            if (value.length >= 3) {
+                e.target.value = '+' + value.substring(0, 3) + ' ' + value.substring(3);
+            } else {
+                e.target.value = '+' + value;
+            }
+        });
+        
+        // Initialize with +373 prefix
+        phoneInput.addEventListener('focus', function(e) {
+            if (!e.target.value) {
+                e.target.value = '+373 ';
+            }
+        });
+        
+        // Prevent deleting the +373 prefix
+        phoneInput.addEventListener('keydown', function(e) {
+            const cursorPosition = e.target.selectionStart;
+            if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 5) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

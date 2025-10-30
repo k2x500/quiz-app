@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Quiz App{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        text-align: center;
+    }
+
+    .stats-icon {
+        font-size: 2.5em;
+        margin-bottom: 12px;
+    }
+
+    .stats-value {
+        font-size: 2.5em;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    .stats-label {
+        color: #6b7280;
+        font-size: 0.9em;
+    }
+
+    .subscription-card {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 2px solid #3b82f6;
+    }
+
+    .subscription-card h3 {
+        color: #1e40af;
+        font-size: 1.6em;
+        margin-bottom: 12px;
+    }
+
+    .subscription-card p {
+        color: #1e40af;
+        margin-bottom: 20px;
+        font-size: 1.05em;
+    }
+
+    .history-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+    }
+
+    .history-card h3 {
+        color: #1a1a1a;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+
+    .history-item {
+        padding: 16px;
+        background: #f9fafb;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .history-item-info h4 {
+        color: #1a1a1a;
+        font-size: 1.1em;
+        margin-bottom: 6px;
+    }
+
+    .history-item-info p {
+        color: #6b7280;
+        font-size: 0.85em;
+    }
+
+    .history-item-score {
+        text-align: right;
+    }
+
+    .score-badge {
+        font-size: 1.4em;
+        font-weight: 700;
+        color: #3b82f6;
+    }
+
+    .score-percentage {
+        color: #6b7280;
+        font-size: 0.85em;
+    }
+
+    .no-history {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+        font-size: 1.05em;
+    }
+
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .history-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .history-item-score {
+            text-align: left;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>👤 Profile</h2>
+    <p>View your progress and account details</p>
+</div>
+
+<div class="profile-grid">
+    <div class="stats-card">
+        <div class="stats-icon">📊</div>
+        <div class="stats-value">{{ progress_records|length }}</div>
+        <div class="stats-label">Quizzes Taken</div>
+    </div>
+    
+    <div class="stats-card">
+        <div class="stats-icon">📧</div>
+        <div class="stats-value">{{ user.email[:20] }}{% if user.email|length > 20 %}...{% endif %}</div>
+        <div class="stats-label">Email</div>
+    </div>
+    
+    <div class="stats-card">
+        <div class="stats-icon">📅</div>
+        <div class="stats-value">{{ user.created_at.strftime('%b %d') }}</div>
+        <div class="stats-label">Member Since</div>
+    </div>
+</div>
+
+{% if not user.is_paid %}
+<div class="subscription-card">
+    <h3>⏰ Trial Account</h3>
+    <p>You have {{ trial_days_left }} day(s) remaining in your free trial</p>
+    <a href="{{ url_for('payment') }}" class="btn">Upgrade to Premium</a>
+</div>
+{% else %}
+<div class="subscription-card" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-color: #10b981;">
+    <h3 style="color: #065f46;">✓ Premium Member</h3>
+    <p style="color: #065f46;">You have full access to all quizzes</p>
+</div>
+{% endif %}
+
+<div class="history-card">
+    <h3>📊 Quiz History</h3>
+    {% if progress_records %}
+        {% for record in progress_records %}
+        <div class="history-item">
+            <div class="history-item-info">
+                <h4>{{ record.quiz_ref.title }}</h4>
+                <p>{{ record.completed_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            </div>
+            <div class="history-item-score">
+                <div class="score-badge">{{ record.score }}/{{ record.total_questions }}</div>
+                <div class="score-percentage">{{ (record.score / record.total_questions * 100)|round|int }}%</div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-history">
+            <p>No quiz history yet. Start taking quizzes to see your progress!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

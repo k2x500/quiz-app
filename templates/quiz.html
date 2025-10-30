@@ -1,0 +1,742 @@
+{% extends "base.html" %}
+
+{% block title %}{{ quiz.title }} - Quiz App{% endblock %}
+
+{% block extra_css %}
+    <style>
+    /* Hide header and sidebar on mobile during quiz */
+    @media (max-width: 768px) {
+        body.quiz-active nav,
+        body.quiz-active .sidebar {
+            display: none !important;
+        }
+        
+        body.quiz-active .main-content {
+            margin-left: 0 !important;
+            padding-bottom: 100px; /* Space for sticky buttons */
+        }
+    }
+
+    .quiz-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding-bottom: 20px;
+    }
+
+    .quiz-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 12px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .quiz-subject {
+        font-size: 0.85em;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .quiz-progress {
+        font-size: 0.85em;
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .score-display {
+        display: none; /* Hidden - not showing score during quiz */
+        }
+
+        .question-card {
+            background: white;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+        color: #1a1a1a;
+        font-size: 1.75em;
+            line-height: 1.5;
+        margin-bottom: 24px;
+        font-weight: 600;
+    }
+
+    .options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        }
+
+        .option {
+        background: #f9fafb;
+        border: 2px solid #e5e7eb;
+            border-radius: 10px;
+        padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95em;
+        line-height: 1.4;
+        }
+
+        .option:hover {
+        background: #f3f4f6;
+        border-color: #3b82f6;
+        transform: translateX(4px);
+    }
+
+    .option-letter {
+        min-width: 32px;
+        height: 32px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85em;
+        flex-shrink: 0;
+    }
+
+    .option-text {
+        flex: 1;
+        color: #1a1a1a;
+        }
+
+        .option.selected {
+        background: #eff6ff;
+        border-color: #3b82f6;
+        }
+
+        .option.correct {
+        background: #ecfdf5;
+        border-color: #10b981;
+    }
+
+    .option.correct .option-letter {
+        background: #10b981;
+        }
+
+        .option.incorrect {
+        background: #fef2f2;
+        border-color: #ef4444;
+    }
+
+    .option.incorrect .option-letter {
+        background: #ef4444;
+    }
+
+    .option.disabled {
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    /* User selection indicator */
+    .option .user-selected-mark {
+            display: none;
+        margin-left: auto;
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #3b82f6;
+    }
+
+    .option.disabled .user-selected-mark {
+        display: inline-block;
+    }
+
+    .multiple-answer-warning {
+        background: #fef3c7;
+        border: 2px solid #f59e0b;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease;
+    }
+
+    .multiple-answer-warning-icon {
+        font-size: 1.5em;
+    }
+
+    .multiple-answer-warning-text {
+        color: #92400e;
+        font-weight: 600;
+        font-size: 0.95em;
+    }
+
+    @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+    .quiz-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .quiz-btn {
+        flex: 1;
+        padding: 14px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .quiz-btn:hover:not(:disabled) {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+    }
+
+    .quiz-btn:active {
+        transform: translateY(0);
+    }
+
+    .quiz-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .back-btn {
+        background: #6b7280;
+        flex: 0.7;
+    }
+
+    .back-btn:hover:not(:disabled) {
+        background: #4b5563;
+        box-shadow: 0 6px 16px rgba(107, 114, 128, 0.3);
+    }
+
+    .submit-btn {
+        background: #3b82f6;
+    }
+
+    .next-btn {
+        background: #10b981;
+    }
+
+    .next-btn:hover:not(:disabled) {
+        background: #059669;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Sticky footer for mobile */
+    @media (max-width: 768px) {
+        .quiz-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            margin: 0;
+            z-index: 100;
+        }
+    }
+
+    .results-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 60px 40px;
+        text-align: center;
+    }
+
+    .results-card h2 {
+        color: #1a1a1a;
+        font-size: 2.5em;
+        margin-bottom: 24px;
+            font-weight: 600;
+    }
+
+    .final-score {
+        font-size: 4.5em;
+        font-weight: 700;
+        color: #3b82f6;
+        margin: 32px 0;
+    }
+
+    .percentage {
+        font-size: 2em;
+        color: #6b7280;
+        margin-bottom: 32px;
+    }
+
+    .results-actions {
+            display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 32px;
+    }
+
+    .results-btn {
+        padding: 16px 32px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1em;
+            transition: all 0.2s ease;
+        }
+
+    .results-btn.primary {
+        background: #3b82f6;
+            color: white;
+        }
+
+    .results-btn.primary:hover {
+        background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+    .results-btn.secondary {
+        background: #f3f4f6;
+        color: #1a1a1a;
+        border: 2px solid #e5e7eb;
+    }
+
+    .results-btn.secondary:hover {
+        background: #e5e7eb;
+        }
+
+        .loading {
+            text-align: center;
+        padding: 60px;
+        color: #6b7280;
+        font-size: 1.3em;
+    }
+
+    .feedback-message {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 10px;
+        font-size: 1.1em;
+        font-weight: 500;
+    }
+
+    .feedback-correct {
+        background: #ecfdf5;
+        color: #065f46;
+    }
+
+    .feedback-incorrect {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    @media (max-width: 768px) {
+        .quiz-container {
+            padding: 0 16px;
+        }
+
+        .quiz-header {
+            padding: 10px 16px;
+            margin-bottom: 16px;
+        }
+
+        .question-card {
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .question-text {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            padding: 12px 14px;
+            font-size: 0.95em;
+        }
+
+        .option-letter {
+            min-width: 30px;
+            height: 30px;
+            font-size: 0.85em;
+        }
+
+        .quiz-btn {
+            font-size: 1em;
+            padding: 14px;
+        }
+
+        .results-card {
+            padding: 40px 24px;
+        }
+
+        .results-card h2 {
+            font-size: 1.8em;
+        }
+
+        .final-score {
+            font-size: 3.5em;
+        }
+
+        .percentage {
+            font-size: 1.6em;
+        }
+
+        .results-actions {
+            flex-direction: column;
+        }
+
+        .results-btn {
+            width: 100%;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <div id="quiz-container">
+        <div class="loading">Loading quiz...</div>
+        </div>
+    </div>
+
+    <script>
+    // Add quiz-active class to body for mobile
+    document.body.classList.add('quiz-active');
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedAnswers = [];
+    let questionHistory = []; // Store history of answered questions
+    let multiAnswerAttempts = {}; // Track attempts for multi-answer questions
+    const quizId = {{ quiz.id }};
+    const quizTitle = "{{ quiz.title }}";
+
+    // Get filter parameter from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const questionFilter = urlParams.get('filter') || 'all';
+
+    // Fetch quiz data
+    fetch(`/get_quiz_data/${quizId}?filter=${questionFilter}`)
+                .then(response => response.json())
+                .then(data => {
+                    questions = data;
+                    showQuestion();
+                })
+                .catch(error => {
+            document.getElementById('quiz-container').innerHTML = 
+                '<div class="results-card"><h2>Error loading quiz</h2><p>Please try again later.</p></div>';
+                });
+
+    function showQuestion(isReview = false) {
+        if (currentQuestionIndex >= questions.length) {
+            showResults();
+            return;
+        }
+
+            const question = questions[currentQuestionIndex];
+        
+        // If not reviewing, reset selections
+        if (!isReview) {
+            selectedAnswers = [];
+        }
+
+        // Check if this question was already answered (from history)
+        const historyItem = questionHistory.find(h => h.index === currentQuestionIndex);
+        const isAnswered = !!historyItem;
+
+        const html = `
+            <div class="quiz-header">
+                <div class="quiz-subject">${quizTitle}</div>
+                <div class="quiz-progress">Question ${currentQuestionIndex + 1} of ${questions.length}</div>
+            </div>
+            
+            <div class="question-card">
+                <div class="question-text">${question.question}</div>
+                
+                <div class="options-container">
+                    ${question.options.map(option => {
+                        let classes = 'option';
+                        const wasSelected = isAnswered && historyItem.selectedAnswers.includes(option.letter);
+                        
+                        if (wasSelected) {
+                            classes += ' selected';
+                        }
+                        if (isAnswered && historyItem.correctAnswers.includes(option.letter)) {
+                            classes += ' correct';
+                        } else if (wasSelected) {
+                            classes += ' incorrect';
+                        }
+                        if (isAnswered) {
+                            classes += ' disabled';
+                        }
+                        return `
+                            <div class="${classes}" ${!isAnswered ? `onclick="selectOption('${option.letter}')"` : ''}>
+                    <div class="option-letter">${option.letter}</div>
+                    <div class="option-text">${option.text}</div>
+                                ${wasSelected ? '<span class="user-selected-mark">✓</span>' : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                <div id="feedback-area">${isAnswered ? historyItem.feedbackHtml : ''}</div>
+                
+                <div class="quiz-buttons">
+                    ${currentQuestionIndex > 0 ? `
+                        <button class="quiz-btn back-btn" onclick="previousQuestion()">
+                            ← Back
+                        </button>
+                    ` : ''}
+                    ${!isAnswered ? `
+                        <button class="quiz-btn submit-btn" id="submit-btn" onclick="submitAnswer()" disabled>
+                            Select an answer
+                        </button>
+                    ` : `
+                        <button class="quiz-btn next-btn" onclick="nextQuestion()">
+                            ${currentQuestionIndex < questions.length - 1 ? 'Next Question →' : 'Finish Quiz →'}
+                        </button>
+                    `}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('quiz-container').innerHTML = html;
+        
+        // Restore selected answers if reviewing
+        if (isAnswered) {
+            selectedAnswers = historyItem.selectedAnswers;
+        }
+    }
+
+    function selectOption(letter) {
+        const options = document.querySelectorAll('.option');
+        const clickedOption = Array.from(options).find(opt => 
+            opt.querySelector('.option-letter').textContent === letter
+        );
+
+        // Check if this is a multi-answer question
+            const question = questions[currentQuestionIndex];
+        const isMultiAnswer = question.correct_answers.length > 1;
+
+        if (!isMultiAnswer) {
+            // Single answer - deselect all others
+            options.forEach(opt => opt.classList.remove('selected'));
+            clickedOption.classList.add('selected');
+            selectedAnswers = [letter];
+                } else {
+            // Multi answer - toggle selection
+            if (clickedOption.classList.contains('selected')) {
+                clickedOption.classList.remove('selected');
+                selectedAnswers = selectedAnswers.filter(a => a !== letter);
+            } else {
+                clickedOption.classList.add('selected');
+                selectedAnswers.push(letter);
+            }
+        }
+
+        // Enable submit button
+        const submitBtn = document.getElementById('submit-btn');
+        if (selectedAnswers.length > 0) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Answer';
+                } else {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Select an answer';
+        }
+    }
+
+    function submitAnswer() {
+        const question = questions[currentQuestionIndex];
+        const options = document.querySelectorAll('.option');
+        const submitBtn = document.getElementById('submit-btn');
+        const feedbackArea = document.getElementById('feedback-area');
+
+        // Check if answer is correct
+        const userAnswerSet = new Set(selectedAnswers.sort());
+        const correctAnswerSet = new Set(question.correct_answers.sort());
+        const isCorrect = 
+            userAnswerSet.size === correctAnswerSet.size &&
+            [...userAnswerSet].every(val => correctAnswerSet.has(val));
+
+        // Check if this is a multiple-answer question
+        const isMultiAnswer = question.correct_answers.length > 1;
+        const hasAtLeastOneCorrect = [...userAnswerSet].some(val => correctAnswerSet.has(val));
+        const hasAnyWrong = [...userAnswerSet].some(val => !correctAnswerSet.has(val));
+        const isPartialCorrect = isMultiAnswer && !isCorrect && hasAtLeastOneCorrect && !hasAnyWrong;
+
+        // Track attempts for multi-answer questions
+        if (!multiAnswerAttempts[currentQuestionIndex]) {
+            multiAnswerAttempts[currentQuestionIndex] = 0;
+        }
+        multiAnswerAttempts[currentQuestionIndex]++;
+
+        const currentAttempt = multiAnswerAttempts[currentQuestionIndex];
+
+        // Handle partial correct answer (first attempt only)
+        if (isPartialCorrect && currentAttempt === 1) {
+            // Show warning but allow retry
+            feedbackArea.innerHTML = `
+                <div class="multiple-answer-warning">
+                    <span class="multiple-answer-warning-icon">⚠️</span>
+                    <span class="multiple-answer-warning-text">Be careful — this question has multiple correct answers.</span>
+                </div>
+            `;
+            submitBtn.textContent = 'Try Again';
+                return;
+            }
+            
+        // Final answer - disable options and show feedback
+        options.forEach(opt => opt.classList.add('disabled'));
+        submitBtn.disabled = true;
+
+        if (isCorrect) {
+            score++;
+        }
+
+        // Highlight correct and incorrect answers
+        options.forEach(opt => {
+            const letter = opt.querySelector('.option-letter').textContent;
+            if (correctAnswerSet.has(letter)) {
+                opt.classList.add('correct');
+            } else if (userAnswerSet.has(letter)) {
+                opt.classList.add('incorrect');
+            }
+            
+            // Add checkmark to user-selected answers
+            if (userAnswerSet.has(letter)) {
+                const checkmark = document.createElement('span');
+                checkmark.className = 'user-selected-mark';
+                checkmark.textContent = '✓';
+                opt.appendChild(checkmark);
+            }
+        });
+
+        // Generate feedback HTML
+        let feedbackHtml = '';
+        if (isPartialCorrect) {
+            // Second attempt, still incomplete
+            feedbackHtml = `
+                <div class="multiple-answer-warning">
+                    <span class="multiple-answer-warning-icon">⚠️</span>
+                    <span class="multiple-answer-warning-text">Be careful — this question has multiple correct answers.</span>
+                </div>
+                <div class="feedback-message feedback-incorrect">
+                    ✗ Incomplete - Correct answers: ${question.correct_answers.join(', ')}
+                </div>
+            `;
+                    } else {
+            feedbackHtml = `
+                <div class="feedback-message ${isCorrect ? 'feedback-correct' : 'feedback-incorrect'}">
+                    ${isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+                    ${!isCorrect ? ` - Correct answer${question.correct_answers.length > 1 ? 's' : ''}: ${question.correct_answers.join(', ')}` : ''}
+                </div>
+            `;
+        }
+
+        feedbackArea.innerHTML = feedbackHtml;
+
+        // Save to history
+        questionHistory.push({
+            index: currentQuestionIndex,
+            selectedAnswers: [...selectedAnswers],
+            correctAnswers: question.correct_answers,
+            isCorrect: isCorrect,
+            feedbackHtml: feedbackHtml
+        });
+
+        // Update button to Next
+        const buttonsContainer = document.querySelector('.quiz-buttons');
+        const backButtonHtml = currentQuestionIndex > 0 ? `
+            <button class="quiz-btn back-btn" onclick="previousQuestion()">
+                ← Back
+            </button>
+        ` : '';
+        
+        buttonsContainer.innerHTML = `
+            ${backButtonHtml}
+            <button class="quiz-btn next-btn" id="next-btn" onclick="nextQuestion()">
+                ${currentQuestionIndex < questions.length - 1 ? 'Next Question →' : 'Finish Quiz →'}
+            </button>
+        `;
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        showQuestion();
+        }
+
+        function previousQuestion() {
+                currentQuestionIndex--;
+        showQuestion(true); // Pass true to indicate we're reviewing
+        }
+
+        function showResults() {
+        // Remove quiz-active class from body
+        document.body.classList.remove('quiz-active');
+        
+
+        const percentage = Math.round((score / questions.length) * 100);
+        let message = '';
+        
+        if (percentage >= 90) {
+            message = '🎉 Outstanding!';
+        } else if (percentage >= 70) {
+            message = '👏 Great job!';
+        } else if (percentage >= 50) {
+            message = '👍 Good effort!';
+            } else {
+            message = '💪 Keep practicing!';
+        }
+
+        const html = `
+            <div class="results-card">
+                <h2>Quiz Complete!</h2>
+                <div style="font-size: 1.3em; margin-bottom: 20px;">${message}</div>
+                <div class="final-score">${score}/${questions.length}</div>
+                <div class="percentage">${percentage}%</div>
+                
+                <div class="results-actions">
+                    <a href="/quiz/${quizId}" class="results-btn primary">Retake Quiz</a>
+                    <a href="{{ url_for('main_menu') }}" class="results-btn secondary">Back to Quizzes</a>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('quiz-container').innerHTML = html;
+
+        // Submit results to server
+        fetch('/submit_quiz', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                quiz_id: quizId,
+                score: score,
+                total: questions.length
+            })
+        });
+        }
+    </script>
+{% endblock %}

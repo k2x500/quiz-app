@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Flask
+instance/*.db
+*.sqlite
+*.sqlite3
+
+# Keep instance folder but ignore database
+!instance/.gitkeep
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keys and sensitive files
+*.ppk
+*.pem
+key.ppk
+key_openssh
+
+# Zip files
+*.zip
+
+# Temporary files
+temp_quiz_data/*
+!temp_quiz_data/.gitkeep
+
+# Documents
+*.docx
+
+# Executables
+*.exe

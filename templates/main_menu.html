@@ -1,0 +1,1465 @@
+{% extends "base.html" %}
+
+{% block title %}Quizzes - Quiz App{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Back Navigation Button */
+    .back-navigation {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .back-navigation.visible {
+        display: flex;
+    }
+
+    .back-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        color: #374151;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .back-button:hover {
+        background: #f3f4f6;
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+
+    .back-icon {
+        font-size: 1.2em;
+    }
+
+    /* Lock Icon */
+    .lock-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 1.1em;
+        color: #6b7280;
+        position: relative;
+    }
+
+    .lock-icon:hover {
+        background: #f3f4f6;
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+
+    .lock-icon.locked {
+        background: #dbeafe;
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+
+    .lock-icon.locked:hover {
+        background: #bfdbfe;
+    }
+
+    /* Tooltip */
+    .lock-icon::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-5px);
+        background: #1f2937;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.75em;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+        z-index: 1000;
+    }
+
+    .lock-icon:hover::after {
+        opacity: 1;
+    }
+
+    /* Level Container */
+    .level-container {
+        display: none;
+        opacity: 0;
+        animation: fadeInSlide 0.4s ease forwards;
+    }
+
+    .level-container.active {
+        display: block;
+    }
+
+    @keyframes fadeInSlide {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .quiz-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .quiz-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        padding: 24px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 1px solid #d1d5db;
+        position: relative;
+    }
+
+    .quiz-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        border-color: #2563eb;
+    }
+
+    .quiz-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 14px;
+    }
+
+    .quiz-card h3 {
+        color: #1a1a1a;
+        font-size: 1.2em;
+        margin-bottom: 8px;
+        margin-top: 0;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    /* Add padding only to cards that have badges */
+    .quiz-card:has(.card-label) h3 {
+        padding-right: 140px; /* Space for badge on the right */
+        min-height: 28px; /* Ensure minimum height to accommodate badge */
+    }
+
+    .progress-badge {
+        padding: 7px 16px;
+        border-radius: 20px;
+        font-size: 0.8em;
+        font-weight: 600;
+        border: 2px solid;
+        background: #eff6ff;
+        color: #1e40af;
+        border-color: #bfdbfe;
+    }
+
+    .progress-badge.completed {
+        background: #ecfdf5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .progress-badge.in-progress {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .progress-badge.not-started {
+        background: #f3f4f6;
+        color: #6b7280;
+        border-color: #e5e7eb;
+    }
+
+    .quiz-card p {
+        color: #374151;
+        margin-bottom: 14px;
+        font-size: 0.9em;
+        line-height: 1.5;
+    }
+
+    .quiz-meta {
+        display: flex;
+        gap: 14px;
+        color: #4b5563;
+        font-size: 0.9em;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+        font-weight: 500;
+    }
+
+    .quiz-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .quiz-score {
+        background: #f3f4f6;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.9em;
+        color: #374151;
+        font-weight: 500;
+        border: 1px solid #d1d5db;
+    }
+
+    /* Divider Line */
+    .section-divider {
+        margin: 30px 0;
+        border: none;
+        border-top: 2px solid #e5e7eb;
+    }
+
+    /* Special Card Labels */
+    .card-label {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.7em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        z-index: 2;
+        white-space: nowrap;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .label-beta {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 2px solid #3b82f6;
+    }
+
+    .label-important {
+        background: #dbeafe;
+        color: #1e3a8a;
+        border: 2px solid #2563eb;
+    }
+
+    .quiz-card-beta {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px dashed #3b82f6;
+    }
+
+    .quiz-card-beta:hover {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: #2563eb;
+    }
+
+    .quiz-card-important {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #3b82f6;
+    }
+
+    .quiz-card-important:hover {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: #2563eb;
+    }
+
+    /* Combined Quiz Cards - Visually Distinct */
+    .quiz-card-combined {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #60a5fa;
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.25);
+    }
+
+    .quiz-card-combined:hover {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: #3b82f6;
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+        transform: translateY(-5px);
+    }
+
+    .label-combined {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        border: 2px solid #1e40af;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .beta-title {
+        color: #1e40af;
+        font-size: 1.2em;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .beta-description {
+        color: #1e40af;
+    }
+
+    /* Coming Soon Notice */
+    .coming-soon-notice {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 60px 40px;
+        margin: 40px auto;
+        max-width: 600px;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid #bfdbfe;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .coming-soon-notice h3 {
+        color: #1e40af;
+        font-size: 1.5em;
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
+
+    .coming-soon-notice p {
+        color: #1e3a8a;
+        font-size: 1.05em;
+        line-height: 1.7;
+        margin-bottom: 24px;
+    }
+
+    .coming-soon-notice .email-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: white;
+        color: #2563eb;
+        border: 2px solid #3b82f6;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .coming-soon-notice .email-link:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .email-icon {
+        font-size: 1.3em;
+    }
+
+    @media (max-width: 768px) {
+        .quiz-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .coming-soon-notice {
+            padding: 40px 24px;
+            margin: 30px 20px;
+        }
+
+        .coming-soon-notice h3 {
+            font-size: 1.3em;
+        }
+
+        .coming-soon-notice p {
+            font-size: 1em;
+        }
+    }
+
+    /* Quiz Settings Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9998;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .quiz-modal {
+        background: white;
+        border-radius: 12px;
+        max-width: 550px;
+        width: 90%;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideDown 0.3s ease;
+    }
+
+    .modal-header {
+        padding: 24px 28px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5em;
+        color: #1a1a1a;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 28px;
+    }
+
+    .course-description {
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        border-left: 4px solid #2563eb;
+    }
+
+    .course-description h4 {
+        margin: 0 0 8px 0;
+        font-size: 0.95em;
+        color: #374151;
+        font-weight: 600;
+    }
+
+    .course-description p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.9em;
+        line-height: 1.5;
+    }
+
+    .quiz-settings-section {
+        margin-bottom: 24px;
+    }
+
+    .quiz-settings-section h4 {
+        margin: 0 0 14px 0;
+        font-size: 1em;
+        color: #1a1a1a;
+        font-weight: 600;
+    }
+
+    .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .radio-option:hover {
+        border-color: #3b82f6;
+        background: #f0f9ff;
+    }
+
+    .radio-option input[type="radio"] {
+        margin-right: 12px;
+        cursor: pointer;
+    }
+
+    .radio-option input[type="radio"]:checked + label {
+        color: #2563eb;
+        font-weight: 600;
+    }
+
+    .radio-option.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .checkbox-option {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .checkbox-option:hover {
+        border-color: #3b82f6;
+        background: #f0f9ff;
+    }
+
+    .checkbox-option input[type="checkbox"] {
+        margin-right: 12px;
+        cursor: pointer;
+    }
+
+    .modal-footer {
+        padding: 20px 28px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+
+    .btn-modal {
+        padding: 11px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95em;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .btn-cancel:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-start {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-start:hover {
+        background: #1d4ed8;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Toast Notification */
+    .toast-notification {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        background: #2563eb;
+        color: white;
+        padding: 14px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        font-weight: 500;
+        z-index: 10000;
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+        max-width: 90%;
+        text-align: center;
+    }
+
+    .toast-notification.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Back Navigation -->
+<div class="back-navigation" id="backNavigation">
+    <div class="back-button" onclick="navigateBack()">
+        <span class="back-icon">←</span>
+        <span id="backText">Back</span>
+    </div>
+    <div class="lock-icon" id="lockIcon" onclick="toggleLock(event)" data-tooltip="Set as home">
+        <span id="lockSymbol">🔓</span>
+    </div>
+</div>
+
+<div class="page-header" id="pageHeader">
+    <h2>Medical Exam Preparation</h2>
+    <p>Select your program to begin</p>
+</div>
+
+<!-- Level 1: Main Programs -->
+<div class="level-container active" id="level1">
+    <div class="quiz-grid">
+        <!-- Medicina I -->
+        <div class="quiz-card" onclick="showYears('medicina1', 6)">
+            <h3>Medicina I</h3>
+            <p>General Medicine program - comprehensive medical education covering all fundamental disciplines</p>
+            <div class="quiz-meta">
+                <span>6 years</span>
+                <span>General Medicine</span>
+            </div>
+        </div>
+
+        <!-- Medicina II -->
+        <div class="quiz-card" onclick="showYears('medicina2', 6)">
+            <h3>Medicina II</h3>
+            <p>General Medicine program - advanced medical training and clinical practice</p>
+            <div class="quiz-meta">
+                <span>6 years</span>
+                <span>General Medicine</span>
+            </div>
+        </div>
+
+        <!-- Stomatology -->
+        <div class="quiz-card" onclick="showYears('stomatology', 5)">
+            <h3>Stomatology</h3>
+            <p>Dental medicine program - specialized training in oral health and dental surgery</p>
+            <div class="quiz-meta">
+                <span>5 years</span>
+                <span>Dental Sciences</span>
+            </div>
+        </div>
+
+        <!-- Pharmacy -->
+        <div class="quiz-card" onclick="showYears('pharmacy', 5)">
+            <h3>Pharmacy</h3>
+            <p>Pharmaceutical sciences program - training in drug development, clinical pharmacy, and healthcare</p>
+            <div class="quiz-meta">
+                <span>5 years</span>
+                <span>Pharmaceutical Sciences</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Divider -->
+    <hr class="section-divider">
+
+    <!-- Special Section -->
+    <div class="quiz-grid">
+        <!-- Final Exam -->
+        <div class="quiz-card quiz-card-important" onclick="showLanguages()">
+            <span class="card-label label-important">IMPORTANT</span>
+            <h3>Final Exam</h3>
+            <p>Comprehensive final examination - test your knowledge across all subjects</p>
+            <div class="quiz-meta">
+                <span>All Subjects</span>
+                <span>Final Assessment</span>
+            </div>
+        </div>
+
+        <!-- Create Custom Set (BETA) -->
+        <div class="quiz-card quiz-card-beta"  onclick="alert('This feature is currently in beta development. Soon you will be able to upload your own exam questions.')">
+            <span class="card-label label-beta">BETA</span>
+            <h3 style="padding-right: 100px;" class="beta-title">Create Custom</h3>
+            <p class="beta-description">Upload your own exam questions and create personalized practice sets. Ideal for targeted preparation.</p>
+            <div class="quiz-meta" style="color: #1e40af;">
+                <span>In Development</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Level 2: Year Selection -->
+<div class="level-container" id="level2">
+    <div class="quiz-grid" id="yearsGrid">
+        <!-- Years will be loaded dynamically -->
+    </div>
+</div>
+
+<!-- Level 2.5: Language Selection (for Final Exam) -->
+<div class="level-container" id="levelLanguages">
+    <div class="quiz-grid">
+        <div class="quiz-card" onclick="showSubjects('final-english', null)">
+            <h3>🇬🇧 English</h3>
+            <p>Final exam questions in English - comprehensive assessment covering all medical subjects</p>
+            <div class="quiz-meta">
+                <span>All Subjects</span>
+                <span>English</span>
+            </div>
+        </div>
+
+        <div class="quiz-card" onclick="showSubjects('final-romanian', null)">
+            <h3>🇷🇴 Romanian</h3>
+            <p>Final exam questions in Romanian - comprehensive assessment covering all medical subjects</p>
+            <div class="quiz-meta">
+                <span>All Subjects</span>
+                <span>Romanian</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Level 3: Final Exam Topics (for English) -->
+<div class="level-container" id="level3Topics">
+    <div class="quiz-grid" id="topicsGrid">
+        <!-- Topics will be loaded dynamically -->
+    </div>
+</div>
+
+<!-- Level 3.5: Paediatrics Subtopics -->
+<div class="level-container" id="levelPaediatricsSubtopics">
+    <div class="quiz-grid" id="paediatricsSubtopicsGrid">
+        <!-- Subtopics will be loaded dynamically -->
+    </div>
+</div>
+
+<!-- Level 4: Subjects (Quizzes) or Year/Other Coming Soon -->
+<div class="level-container" id="level4">
+    <!-- Coming Soon Notice (shown for year-level pages) -->
+    <div class="coming-soon-notice" id="comingSoonNotice" style="display: none;">
+        <h3>📚 Coming Soon</h3>
+        <p>We're working on adding subject materials for this year. If you have quiz question data for this year, we'd love to hear from you!</p>
+        <a href="mailto:medquiz@gmail.com" class="email-link">
+            <span class="email-icon">📩</span>
+            <span>medquiz@gmail.com</span>
+        </a>
+    </div>
+
+    <!-- Subjects Grid (shown for direct subject pages like Stomatology/Final Exam) -->
+    <div class="quiz-grid" id="subjectsGrid">
+        <!-- Subjects will be loaded dynamically -->
+    </div>
+</div>
+
+<!-- Quiz Settings Modal -->
+<div class="modal-overlay" id="quizModal">
+    <div class="quiz-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modalQuizTitle">Quiz Title</h2>
+        </div>
+        <div class="modal-body">
+            <!-- Course Description -->
+            <div class="course-description">
+                <h4>📚 Course Overview</h4>
+                <p id="modalQuizDescription">Quiz description will appear here</p>
+            </div>
+
+            <!-- Question Type Filter -->
+            <div class="quiz-settings-section">
+                <h4>Question Selection</h4>
+                <div class="radio-group">
+                    <label class="radio-option selected">
+                        <input type="radio" name="questionType" value="all" checked>
+                        <span>Show all questions (<span id="totalQuestions">0</span> questions)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="questionType" value="single">
+                        <span>Only single-answer questions (<span id="singleCount">0</span> questions)</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="questionType" value="multiple">
+                        <span>Only multiple-answer questions (<span id="multipleCount">0</span> questions)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Optional Settings -->
+            <div class="quiz-settings-section">
+                <h4>Additional Options</h4>
+                <label class="checkbox-option">
+                    <input type="checkbox" id="saveIncorrect" disabled>
+                    <span>📝 Save questions where I answered incorrectly (Coming Soon)</span>
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-cancel" onclick="closeQuizModal()">Cancel</button>
+            <button class="btn-modal btn-start" onclick="startQuiz()">Start Quiz</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Navigation State
+    let currentLevel = 1;
+    let currentProgram = null;
+    let currentYear = null;
+    let totalYears = 0;
+    let selectedQuizId = null;
+    let quizDetails = null;
+
+    // All quizzes from backend
+    const allQuizzes = {{ quizzes|tojson }};
+
+    // Lock/Home page state
+    let lockedPage = null;
+
+    // Initialize locked page from server
+    function initLockedPage() {
+        // Fetch locked home page from server
+        fetch('/get_home_page')
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    lockedPage = result.data;
+                    // Always navigate to locked page if one exists
+                    // Small delay to ensure DOM is ready
+                    setTimeout(() => {
+                        navigateToLockedPage();
+                    }, 100);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching locked page:', error);
+            });
+    }
+
+    // Save locked page to server
+    function saveLockedPage() {
+        if (lockedPage) {
+            fetch('/set_home_page', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(lockedPage)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showToast(result.message || 'This page has been set as your Home.');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving locked page:', error);
+                showToast('Failed to save home page.');
+            });
+        } else {
+            fetch('/remove_home_page', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showToast(result.message || 'Home page removed.');
+                }
+            })
+            .catch(error => {
+                console.error('Error removing locked page:', error);
+                showToast('Failed to remove home page.');
+            });
+        }
+    }
+
+    // Check if current page is locked
+    function isCurrentPageLocked() {
+        if (!lockedPage) return false;
+        
+        return (
+            lockedPage.level === currentLevel &&
+            lockedPage.program === currentProgram &&
+            lockedPage.year === currentYear
+        );
+    }
+
+    // Update lock icon appearance
+    function updateLockIcon() {
+        const lockIcon = document.getElementById('lockIcon');
+        const lockSymbol = document.getElementById('lockSymbol');
+        const isLocked = isCurrentPageLocked();
+        
+        if (isLocked) {
+            lockIcon.classList.add('locked');
+            lockSymbol.textContent = '🔒';
+            lockIcon.setAttribute('data-tooltip', 'Remove from home');
+        } else {
+            lockIcon.classList.remove('locked');
+            lockSymbol.textContent = '🔓';
+            lockIcon.setAttribute('data-tooltip', 'Set as home');
+        }
+    }
+
+    // Toggle lock state
+    function toggleLock(event) {
+        event.stopPropagation();
+        
+        if (isCurrentPageLocked()) {
+            // Unlock
+            lockedPage = null;
+        } else {
+            // Lock current page
+            lockedPage = {
+                level: currentLevel,
+                program: currentProgram,
+                year: currentYear,
+                totalYears: totalYears
+            };
+        }
+        
+        saveLockedPage();
+        updateLockIcon();
+    }
+
+    // Navigate to locked page
+    function navigateToLockedPage() {
+        if (!lockedPage) return;
+        
+        // Only navigate if we're on level 1 (main menu)
+        if (currentLevel !== 1) return;
+        
+        if (lockedPage.level === 2) {
+            // Year selection page for a program
+            showYears(lockedPage.program, lockedPage.totalYears);
+        } else if (lockedPage.level === 2.5) {
+            // Language selection for Final Exam
+            showLanguages();
+        } else if (lockedPage.level === 3) {
+            // Final Exam topics (English)
+            if (lockedPage.program === 'final-english') {
+                showFinalExamTopics();
+            }
+        } else if (lockedPage.level === 3.5) {
+            // Paediatrics subtopics
+            showPaediatricsSubtopics();
+        } else if (lockedPage.level === 4) {
+            // Subject list for a specific year
+            showSubjects(lockedPage.program, lockedPage.year);
+        }
+    }
+
+    // Program names mapping
+    const programNames = {
+        'medicina1': 'Medicina I',
+        'medicina2': 'Medicina II',
+        'stomatology': 'Stomatology',
+        'pharmacy': 'Pharmacy'
+    };
+
+    // Year descriptions
+    const yearDescriptions = {
+        1: 'First year - foundational sciences and introduction to clinical practice',
+        2: 'Second year - advanced basic sciences and early clinical exposure',
+        3: 'Third year - transition to clinical medicine and patient care',
+        4: 'Fourth year - specialized clinical rotations and advanced practice',
+        5: 'Fifth year - intensive clinical training and comprehensive preparation',
+        6: 'Sixth year - final clinical training and professional development'
+    };
+
+    // Navigation Functions
+    function showYears(program, years) {
+        currentLevel = 2;
+        currentProgram = program;
+        currentYear = null;
+        totalYears = years;
+        
+        // Update header
+        const programName = programNames[program] || program;
+        updatePageHeader(programName, 'Select your year of study');
+        
+        // Generate year cards dynamically
+        generateYearCards(years);
+        
+        // Show level 2
+        switchLevel(2);
+        
+        // Show back button and update lock icon
+        updateLockIcon();
+        // Show back button
+        document.getElementById('backNavigation').classList.add('visible');
+    }
+
+    function generateYearCards(years) {
+        const grid = document.getElementById('yearsGrid');
+        grid.innerHTML = '';
+        
+        for (let i = 1; i <= years; i++) {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.onclick = () => showSubjects(null, i);
+            
+            card.innerHTML = `
+                <h3>Year ${i}</h3>
+                <p>${yearDescriptions[i] || `Year ${i} - Medical education and training`}</p>
+                <div class="quiz-meta">
+                    <span>${i <= 2 ? 'Basic Sciences' : i <= 4 ? 'Clinical Sciences' : 'Advanced Clinical'}</span>
+                </div>
+            `;
+            
+            grid.appendChild(card);
+        }
+    }
+
+    function showLanguages() {
+        currentLevel = 2.5;
+        currentProgram = 'final';
+        currentYear = null;
+        
+        // Update header
+        updatePageHeader('Final Exam', 'Select your preferred language');
+        
+        // Show language selection level
+        switchLevel('Languages');
+        
+        // Show back button and update lock icon
+        updateLockIcon();
+        document.getElementById('backNavigation').classList.add('visible');
+    }
+
+    function showFinalExamTopics() {
+        currentLevel = 3;
+        currentProgram = 'final-english';
+        currentYear = null;
+        
+        // Update header
+        updatePageHeader('Final Exam - English', 'Select a topic to start practicing');
+        
+        // Generate topics grid
+        generateFinalExamTopics();
+        
+        // Show level 3 topics
+        switchLevel('3Topics');
+        
+        // Show back button and update lock icon
+        updateLockIcon();
+        document.getElementById('backNavigation').classList.add('visible');
+    }
+
+    function generateFinalExamTopics() {
+        const grid = document.getElementById('topicsGrid');
+        grid.innerHTML = '';
+        
+        // Add "All Topics Combined" card FIRST
+        const combinedCard = document.createElement('div');
+        combinedCard.className = 'quiz-card quiz-card-combined';
+        combinedCard.onclick = () => showAllTopicsCombined();
+        combinedCard.innerHTML = `
+            <span class="card-label label-combined">COMPREHENSIVE</span>
+            <h3>All Topics Combined</h3>
+            <p>Take a mixed test with questions from all available subjects — the ultimate exam preparation challenge</p>
+            <div class="quiz-meta">
+                <span>All Subjects</span>
+                <span>Mixed Questions</span>
+            </div>
+        `;
+        grid.appendChild(combinedCard);
+        
+        // Then add individual topics
+        const topics = [
+            { name: 'Paediatrics', hasSub: true, desc: 'Comprehensive paediatric medicine topics and clinical cases' },
+            { name: 'Cardiology', quizId: 2, desc: 'Cardiovascular diseases, diagnostics, and treatment protocols' },
+            { name: 'Gastroenterology', quizId: 3, desc: 'Digestive system disorders and gastrointestinal pathology' },
+            { name: 'Nephrology', quizId: 1, desc: 'Kidney diseases, dialysis, and renal pathophysiology' },
+            { name: 'Obstetrics', quizId: 4, desc: 'Pregnancy, childbirth, and postpartum care' },
+            { name: 'Paediatric Surgery', quizId: 26, desc: 'Surgical interventions in children and neonates' },
+            { name: 'Pneumology & Allergology', quizId: 5, desc: 'Respiratory diseases and allergic conditions' },
+            { name: 'Rheumatology', quizId: 6, desc: 'Autoimmune diseases and musculoskeletal disorders' },
+            { name: 'Surgery I', quizId: 7, desc: 'General surgical procedures and techniques' },
+            { name: 'Surgery II', quizId: 8, desc: 'Advanced surgical specialties and interventions' },
+            { name: 'Surgery III', quizId: 25, desc: 'Specialized surgical procedures and advanced techniques' }
+        ];
+        
+        topics.forEach(topic => {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            
+            if (topic.hasSub) {
+                // Paediatrics has subtopics
+                card.onclick = () => showPaediatricsSubtopics();
+            } else if (topic.quizId) {
+                // Nephrology opens quiz details directly
+                card.onclick = () => openQuizDetails(topic.quizId);
+            } else {
+                // Other topics show "Coming Soon"
+                card.onclick = () => showTopicComingSoon(topic.name);
+            }
+            
+            card.innerHTML = `
+                <h3>${topic.name}</h3>
+                <p>${topic.desc}</p>
+                <div class="quiz-meta">
+                    <span>${topic.quizId ? 'Available' : topic.hasSub ? 'Multiple Topics' : 'Coming Soon'}</span>
+                </div>
+            `;
+            
+            grid.appendChild(card);
+        });
+    }
+
+    function showPaediatricsSubtopics() {
+        currentLevel = 3.5;
+        currentProgram = 'paediatrics';
+        
+        // Update header
+        updatePageHeader('Paediatrics', 'Select a subtopic to start practicing');
+        
+        // Generate subtopics grid
+        generatePaediatricsSubtopics();
+        
+        // Show paediatrics subtopics level
+        switchLevel('PaediatricsSubtopics');
+        
+        // Show back button and update lock icon
+        updateLockIcon();
+        document.getElementById('backNavigation').classList.add('visible');
+    }
+
+    function generatePaediatricsSubtopics() {
+        const grid = document.getElementById('paediatricsSubtopicsGrid');
+        grid.innerHTML = '';
+        
+        // Add "Answer All Topics Together" card FIRST
+        const combinedCard = document.createElement('div');
+        combinedCard.className = 'quiz-card quiz-card-combined';
+        combinedCard.onclick = () => showAllPaediatricsTopicsCombined();
+        combinedCard.innerHTML = `
+            <span class="card-label label-combined">COMPREHENSIVE</span>
+            <h3>Answer All Topics Together</h3>
+            <p>Practice with a mixed quiz covering all paediatric topics — comprehensive exam preparation</p>
+            <div class="quiz-meta">
+                <span>All Paediatrics</span>
+                <span>Mixed Questions</span>
+            </div>
+        `;
+        grid.appendChild(combinedCard);
+        
+        // Then add individual subtopics
+        const subtopics = [
+            { name: 'Acute Pneumonia', quizId: 9 },
+            { name: 'Acute Respiratory Infections', quizId: 10 },
+            { name: 'Acute Rheumatic Fever', quizId: 11 },
+            { name: 'Bronchial Asthma', quizId: 12 },
+            { name: 'Bronchitis', quizId: 13 },
+            { name: 'Cardiomyopathies', quizId: 14 },
+            { name: 'Child Growth and Development', quizId: 15 },
+            { name: 'Chronic Lung Disease', quizId: 16 },
+            { name: 'Coagulation Disorders', quizId: 17 },
+            { name: 'Collagenosis in Children', quizId: 18 },
+            { name: 'Congenital Heart Diseases', quizId: 19 },
+            { name: 'Iron Deficiency Anemia', quizId: 20 },
+            { name: 'Malabsorption', quizId: 21 },
+            { name: 'Malnutrition', quizId: 22 },
+            { name: 'Neonatology', quizId: 23 },
+            { name: 'Paediatric Surgery', quizId: 26 },
+            { name: 'Rickets', quizId: 24 }
+        ];
+        
+        subtopics.forEach(subtopic => {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.onclick = () => openQuizDetails(subtopic.quizId);
+            
+            card.innerHTML = `
+                <h3>${subtopic.name}</h3>
+                <p>Clinical cases and exam questions for ${subtopic.name.toLowerCase()}</p>
+                <div class="quiz-meta">
+                    <span>Available</span>
+                </div>
+            `;
+            
+            grid.appendChild(card);
+        });
+    }
+
+    function showAllPaediatricsTopicsCombined() {
+        alert('Combined paediatrics test with all topics is coming soon!\n\nThis feature will allow you to practice with a randomized mix of questions from all paediatric subtopics.');
+    }
+
+    function showTopicComingSoon(topicName) {
+        alert(`${topicName} questions are coming soon!\n\nIf you have question data for this topic, please send it to medquiz@gmail.com`);
+    }
+
+    function showAllTopicsCombined() {
+        alert('Combined test with all topics is coming soon!\n\nThis feature will allow you to practice with a randomized mix of questions from all available Final Exam subjects.');
+    }
+
+    function openQuizDetails(quizId) {
+        // Find the quiz in allQuizzes and open its modal directly
+        const quiz = allQuizzes.find(q => q.id === quizId);
+        if (quiz) {
+            openQuizModal(quiz.id, quiz.title, quiz.description);
+        } else {
+            alert('Quiz not found. Please try again.');
+        }
+    }
+
+    function showSubjects(program, year) {
+        currentLevel = 4;
+        if (program) currentProgram = program;
+        if (year) currentYear = year;
+        
+        // Update header
+        let headerTitle = 'Available Subjects';
+        let headerDesc = 'Select a subject to start practicing';
+        
+        // Check if this is a year page (any faculty + year)
+        const isYearPage = currentYear && !program;
+        
+        // Check if this should show "Coming Soon"
+        const shouldShowComingSoon = isYearPage || program === 'final-romanian';
+        
+        // Determine header based on context
+        if (isYearPage) {
+            const programName = programNames[currentProgram] || currentProgram;
+            headerTitle = `${programName} - Year ${currentYear}`;
+            headerDesc = 'Subject materials for this year';
+        } else if (program === 'final-english') {
+            // Redirect to topics instead
+            showFinalExamTopics();
+            return;
+        } else if (program === 'final-romanian') {
+            headerTitle = 'Final Exam - Romanian';
+            headerDesc = 'Available exam subjects in Romanian';
+        }
+        
+        updatePageHeader(headerTitle, headerDesc);
+        
+        // Show coming soon notice or load subjects
+        if (shouldShowComingSoon) {
+            // Show coming soon notice
+            document.getElementById('comingSoonNotice').style.display = 'flex';
+            document.getElementById('subjectsGrid').style.display = 'none';
+        } else {
+            // Should not reach here, but default to coming soon
+            document.getElementById('comingSoonNotice').style.display = 'flex';
+            document.getElementById('subjectsGrid').style.display = 'none';
+        }
+        
+        // Show level 4
+        switchLevel(4);
+        
+        // Show back button and update lock icon
+        updateLockIcon();
+        document.getElementById('backNavigation').classList.add('visible');
+    }
+
+    function loadSubjects() {
+        const grid = document.getElementById('subjectsGrid');
+        grid.innerHTML = '';
+        
+        // For now, show all quizzes (Nephrology)
+        // In the future, you can filter based on currentProgram and currentYear
+        allQuizzes.forEach(quiz => {
+            const card = createSubjectCard(quiz);
+            grid.appendChild(card);
+        });
+    }
+
+    function createSubjectCard(quiz) {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.onclick = () => openQuizModal(quiz.id, quiz.title, quiz.description);
+        
+        let progressClass = 'not-started';
+        if (quiz.progress_percentage >= 80) progressClass = 'completed';
+        else if (quiz.progress_percentage > 0) progressClass = 'in-progress';
+        
+        card.innerHTML = `
+            <div class="quiz-card-header">
+                <h3>${quiz.title}</h3>
+                <span class="progress-badge ${progressClass}">${quiz.progress_percentage}% completed</span>
+            </div>
+            <p>${quiz.description}</p>
+            <div class="quiz-meta">
+                <span>${quiz.question_count} questions</span>
+                <span>${quiz.category}</span>
+            </div>
+            ${quiz.last_score !== null ? `
+                <div class="quiz-score">
+                    Last Score: ${quiz.last_score}/${quiz.last_total} (${Math.round(quiz.last_score / quiz.last_total * 100)}%)
+                </div>
+            ` : ''}
+        `;
+        
+        return card;
+    }
+
+    function navigateBack() {
+        if (currentLevel === 4) {
+            // From year-based subjects or coming soon pages
+            if (currentYear) {
+                // Go back to year selection
+                currentLevel = 2;
+                currentYear = null;
+                const programName = programNames[currentProgram] || currentProgram;
+                updatePageHeader(programName, 'Select your year of study');
+                switchLevel(2);
+            } else if (currentProgram === 'final-romanian') {
+                // Go back to language selection
+                currentLevel = 2.5;
+                currentProgram = 'final';
+                updatePageHeader('Final Exam', 'Select your preferred language');
+                switchLevel('Languages');
+            } else {
+                // Go back to main menu
+                currentLevel = 1;
+                currentProgram = null;
+                updatePageHeader('Medical Exam Preparation', 'Select your program to begin');
+                switchLevel(1);
+                document.getElementById('backNavigation').classList.remove('visible');
+            }
+        } else if (currentLevel === 3.5) {
+            // From paediatrics subtopics back to Final Exam topics
+            currentLevel = 3;
+            currentProgram = 'final-english';
+            showFinalExamTopics();
+        } else if (currentLevel === 3) {
+            // From Final Exam topics back to language selection
+            currentLevel = 2.5;
+            currentProgram = 'final';
+            updatePageHeader('Final Exam', 'Select your preferred language');
+            switchLevel('Languages');
+        } else if (currentLevel === 2.5) {
+            // From language selection back to main menu
+            currentLevel = 1;
+            currentProgram = null;
+            updatePageHeader('Medical Exam Preparation', 'Select your program to begin');
+            switchLevel(1);
+            document.getElementById('backNavigation').classList.remove('visible');
+        } else if (currentLevel === 2) {
+            // From year selection back to main menu
+            currentLevel = 1;
+            currentProgram = null;
+            totalYears = 0;
+            updatePageHeader('Medical Exam Preparation', 'Select your program to begin');
+            switchLevel(1);
+            document.getElementById('backNavigation').classList.remove('visible');
+        }
+    }
+
+    function switchLevel(level) {
+        // Hide all levels
+        document.querySelectorAll('.level-container').forEach(container => {
+            container.classList.remove('active');
+        });
+        
+        // Show selected level
+        setTimeout(() => {
+            let levelId;
+            if (level === 'Languages') {
+                levelId = 'levelLanguages';
+            } else if (level === 'PaediatricsSubtopics') {
+                levelId = 'levelPaediatricsSubtopics';
+            } else if (level === '3Topics') {
+                levelId = 'level3Topics';
+            } else {
+                levelId = `level${level}`;
+            }
+            document.getElementById(levelId).classList.add('active');
+        }, 100);
+    }
+
+    function updatePageHeader(title, description) {
+        const header = document.getElementById('pageHeader');
+        header.innerHTML = `
+            <h2>${title}</h2>
+            <p>${description}</p>
+        `;
+    }
+
+    // Modal Functions (keep existing functionality)
+    function openQuizModal(quizId, title, description) {
+        selectedQuizId = quizId;
+        
+        document.getElementById('quizModal').classList.add('active');
+        document.getElementById('modalQuizTitle').textContent = title;
+        document.getElementById('modalQuizDescription').textContent = description;
+        
+        fetch(`/quiz_details/${quizId}`)
+            .then(response => response.json())
+            .then(data => {
+                quizDetails = data;
+                document.getElementById('totalQuestions').textContent = data.total_questions;
+                document.getElementById('singleCount').textContent = data.single_answer_count;
+                document.getElementById('multipleCount').textContent = data.multiple_answer_count;
+            })
+            .catch(error => {
+                console.error('Error fetching quiz details:', error);
+            });
+    }
+
+    function closeQuizModal() {
+        document.getElementById('quizModal').classList.remove('active');
+        selectedQuizId = null;
+        quizDetails = null;
+    }
+
+    function startQuiz() {
+        if (!selectedQuizId) return;
+        const questionType = document.querySelector('input[name="questionType"]:checked').value;
+        window.location.href = `/quiz/${selectedQuizId}?filter=${questionType}`;
+    }
+
+    // Event Listeners
+    document.getElementById('quizModal').addEventListener('click', function(e) {
+        if (e.target === this) closeQuizModal();
+    });
+
+    document.querySelectorAll('.radio-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            this.querySelector('input').checked = true;
+        });
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeQuizModal();
+    });
+
+    // Toast notification function
+    function showToast(message) {
+        // Remove existing toast if any
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        // Create new toast
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+
+        // Hide and remove toast after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // Initialize locked page on page load
+    initLockedPage();
+</script>
+
+{% endblock %}

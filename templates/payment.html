@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Subscribe - MedQuiz{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .page-header h2 {
+        font-size: 1.6em;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    .page-header p {
+        font-size: 0.95em;
+        color: #6b7280;
+    }
+
+    .trial-status {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+        padding: 14px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-size: 0.9em;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .payment-content {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .subscription-card,
+    .info-section {
+        max-width: 500px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .subscription-card {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #2563eb;
+        border-radius: 10px;
+        padding: 28px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .subscription-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    .subscription-card.featured {
+        border-color: #16a34a;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    }
+
+    .subscription-card.featured:hover {
+        box-shadow: 0 6px 16px rgba(22, 163, 74, 0.3);
+    }
+
+    .savings-badge {
+        display: inline-block;
+        background: #16a34a;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75em;
+        font-weight: 700;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .subscription-card h3 {
+        color: #1e40af;
+        font-size: 1.2em;
+        margin-bottom: 12px;
+        font-weight: 600;
+    }
+
+    .subscription-card.featured h3 {
+        color: #166534;
+    }
+
+    .price {
+        font-size: 2.5em;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 6px;
+    }
+
+    .subscription-card.featured .price {
+        color: #166534;
+    }
+
+    .price-period {
+        color: #3b82f6;
+        font-size: 0.9em;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+
+    .subscription-card.featured .price-period {
+        color: #16a34a;
+    }
+
+    .features {
+        list-style: none;
+        text-align: left;
+        margin-bottom: 20px;
+        background: white;
+        border-radius: 8px;
+        padding: 14px;
+        border: 1px solid #d1d5db;
+    }
+
+    .features li {
+        padding: 7px 0;
+        color: #1f2937;
+        font-size: 0.85em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .features li:last-child {
+        border-bottom: none;
+    }
+
+    .features li:before {
+        content: "✓";
+        color: #10b981;
+        font-weight: bold;
+        font-size: 1.2em;
+        flex-shrink: 0;
+    }
+
+    .pay-button {
+        width: 100%;
+        padding: 14px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .pay-button:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+    }
+
+    .subscription-card.featured .pay-button {
+        background: #16a34a;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+
+    .subscription-card.featured .pay-button:hover {
+        background: #15803d;
+        box-shadow: 0 6px 16px rgba(22, 163, 74, 0.4);
+    }
+
+    .info-section {
+        background: white;
+        border: 2px solid #d1d5db;
+        border-radius: 10px;
+        padding: 28px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: left;
+        transition: all 0.3s ease;
+    }
+
+    .info-section:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .info-section h3 {
+        color: #1a1a1a;
+        font-size: 1.3em;
+        margin-bottom: 14px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .info-section p {
+        color: #4b5563;
+        font-size: 0.9em;
+        line-height: 1.6;
+        margin-bottom: 14px;
+    }
+
+    .info-section ul {
+        list-style: none;
+        margin-top: 16px;
+    }
+
+    .info-section ul li {
+        color: #374151;
+        font-size: 0.85em;
+        padding: 7px 0;
+        display: flex;
+        align-items: start;
+        gap: 8px;
+    }
+
+    .info-section ul li:before {
+        content: "📚";
+        flex-shrink: 0;
+        font-size: 1.1em;
+    }
+
+    .warning-message {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 24px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        display: none;
+    }
+
+    .warning-message.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .warning-message-icon {
+        font-size: 2em;
+        margin-bottom: 10px;
+    }
+
+    .warning-message h4 {
+        color: #92400e;
+        font-size: 1.1em;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .warning-message p {
+        color: #78350f;
+        font-size: 0.9em;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    @media (max-width: 1200px) {
+        .payment-content {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+    }
+
+    /* Coming Soon Overlay */
+    .coming-soon-overlay {
+        position: relative;
+    }
+
+    .coming-soon-overlay::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border-radius: 10px;
+        z-index: 10;
+    }
+
+    .coming-soon-overlay::after {
+        content: 'Coming Soon';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #1a1a1a;
+        text-shadow: 0 2px 8px rgba(255, 255, 255, 0.9);
+        z-index: 11;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .coming-soon-overlay * {
+        pointer-events: none;
+        user-select: none;
+    }
+
+    @media (max-width: 768px) {
+        .payment-container {
+            padding: 0 15px;
+        }
+
+        .price {
+            font-size: 2.2em;
+        }
+
+        .subscription-card,
+        .info-section {
+            padding: 24px;
+        }
+
+        .coming-soon-overlay::after {
+            font-size: 1.2em;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="page-header">
+        <h2>💎 Subscribe to MedQuiz</h2>
+    </div>
+
+    <!-- Warning Message (appears at top when clicked) -->
+    <div class="warning-message" id="warningMessage">
+        <div class="warning-message-icon">⏳</div>
+        <h4>Payment System Coming Soon</h4>
+        <p>You will remain on free trial until we add the payment processor. Continue using all features without limitations.</p>
+    </div>
+
+    {% if not has_access %}
+    <div class="trial-status">
+        ⏰ Your trial has expired. Subscribe to continue.
+    </div>
+    {% else %}
+    <div class="trial-status">
+        📅 You have {{ trial_days_left }} day(s) left in your free trial
+    </div>
+    {% endif %}
+
+    <div class="payment-content">
+        <!-- Monthly Plan -->
+        <div class="subscription-card coming-soon-overlay">
+            <h3>Monthly Plan</h3>
+            <div class="price">$9.99</div>
+            <div class="price-period">per month</div>
+
+            <ul class="features">
+                <li>All medical subjects</li>
+                <li>Progress tracking</li>
+                <li>Regular updates</li>
+                <li>Mobile optimized</li>
+                <li>Custom sets (Beta)</li>
+            </ul>
+
+            <button class="pay-button" onclick="showPaymentWarning()">Pay Now</button>
+        </div>
+
+        <!-- 3-Month Plan (Featured) -->
+        <div class="subscription-card featured coming-soon-overlay">
+            <div class="savings-badge">Save 20%</div>
+            <h3>3-Month Plan</h3>
+            <div class="price">$24.00</div>
+            <div class="price-period">$8/month • billed quarterly</div>
+
+            <ul class="features">
+                <li>All medical subjects</li>
+                <li>Progress tracking</li>
+                <li>Regular updates</li>
+                <li>Mobile optimized</li>
+                <li>Custom sets (Beta)</li>
+            </ul>
+
+            <button class="pay-button" onclick="showPaymentWarning()">Pay Now</button>
+        </div>
+
+        <!-- About Section -->
+        <div class="info-section">
+            <h3>About MedQuiz</h3>
+            <p>Our platform is specifically designed to help medical students from Moldova prepare effectively for their university exams.</p>
+            
+            <p>We provide realistic, exam-style questions that mirror the actual test format, helping you build confidence and master the material before exam day.</p>
+
+            <ul>
+                <li>Comprehensive question banks covering all major medical subjects</li>
+                <li>Progress tracking to monitor your preparation journey</li>
+                <li>Regular updates with new questions and topics</li>
+                <li>Designed for students at medical universities in Moldova</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showPaymentWarning() {
+        const warningEl = document.getElementById('warningMessage');
+        warningEl.classList.add('show');
+        // Scroll to top of page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quiz App{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f9fafb;
+            min-height: 100vh;
+        }
+
+        /* Desktop Sidebar Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sidebar-header h1 {
+            color: #1a1a1a;
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .user-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .user-info-name {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 0.9em;
+        }
+
+        .user-info-trial {
+            font-size: 0.8em;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .trial-warning {
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            margin-top: 8px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: #f9fafb;
+            color: #1a1a1a;
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+            font-weight: 600;
+        }
+
+        .nav-item-icon {
+            margin-right: 12px;
+            font-size: 1.2em;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 20px 24px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+            max-width: 100%;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 10px 0;
+            z-index: 100;
+        }
+
+        .mobile-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.75em;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-nav-item.active {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .mobile-nav-icon {
+            font-size: 1.6em;
+            margin-bottom: 4px;
+        }
+
+        .mobile-header {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            z-index: 99;
+        }
+
+        .mobile-header h1 {
+            font-size: 1.3em;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+                padding-bottom: 80px;
+            }
+
+            .mobile-nav {
+                display: block;
+            }
+
+            .mobile-header {
+                display: block;
+            }
+        }
+
+        /* Common Components */
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            font-size: 2em;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            font-size: 1.05em;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .alert-success {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-info {
+            background-color: #f0f9ff;
+            color: #075985;
+            border: 1px solid #bae6fd;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Desktop Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>📚 MedQuiz</h1>
+            {% if current_user.is_authenticated %}
+            <div class="user-info">
+                <div class="user-info-name">{{ current_user.username }}</div>
+                {% if not current_user.is_paid %}
+                <div class="user-info-trial">Trial: {{ current_user.get_trial_days_left() }} days left</div>
+                    {% if current_user.get_trial_days_left() == 0 %}
+                    <div class="trial-warning">Trial expired - Please upgrade</div>
+                    {% endif %}
+                {% else %}
+                <div class="user-info-trial">✓ Premium Member</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('main_menu') }}" class="nav-item {% if request.endpoint == 'main_menu' %}active{% endif %}">
+                <span class="nav-item-icon">📚</span> Subjects
+            </a>
+            <a href="{{ url_for('progress') }}" class="nav-item {% if request.endpoint == 'progress' %}active{% endif %}">
+                <span class="nav-item-icon">📊</span> Progress
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+                <span class="nav-item-icon">⚙️</span> Settings
+            </a>
+            {% if not current_user.is_paid %}
+            <a href="{{ url_for('payment') }}" class="nav-item {% if request.endpoint == 'payment' %}active{% endif %}">
+                <span class="nav-item-icon">💎</span> Subscribe
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="nav-item">
+                <span class="nav-item-icon">🚪</span> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <h1>📚 MedQuiz</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-container">
+        <div class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="{{ url_for('main_menu') }}" class="mobile-nav-item {% if request.endpoint == 'main_menu' %}active{% endif %}">
+                <span class="mobile-nav-icon">📚</span> Subjects
+            </a>
+            <a href="{{ url_for('progress') }}" class="mobile-nav-item {% if request.endpoint == 'progress' %}active{% endif %}">
+                <span class="mobile-nav-icon">📊</span> Progress
+            </a>
+            <a href="{{ url_for('settings') }}" class="mobile-nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+                <span class="mobile-nav-icon">⚙️</span> Settings
+            </a>
+            {% if not current_user.is_paid %}
+            <a href="{{ url_for('payment') }}" class="mobile-nav-item {% if request.endpoint == 'payment' %}active{% endif %}">
+                <span class="mobile-nav-icon">💎</span> Subscribe
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
